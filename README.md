@@ -1,5 +1,8 @@
 # AI Fiesta Chat Application
 
+[![Status](https://img.shields.io/badge/Deployment-Live-success)](https://ashishgenai.online)
+**URL**: https://ashishgenai.online
+
 A multi-model AI chat application built with Next.js, TypeScript, and Tailwind CSS. Chat with multiple AI models simultaneously in a beautiful, modern interface.
 
 ## Features
