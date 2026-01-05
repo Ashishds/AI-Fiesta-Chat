@@ -16,11 +16,29 @@ variable "github_token" {
   sensitive = true
 }
 
-variable "openai_api_key" { type = string; sensitive = true }
-variable "groq_api_key" { type = string; sensitive = true }
-variable "perplexity_api_key" { type = string; sensitive = true }
-variable "next_public_clerk_publishable_key" { type = string }
-variable "clerk_secret_key" { type = string; sensitive = true }
+variable "openai_api_key" {
+  type      = string
+  sensitive = true
+}
+
+variable "groq_api_key" {
+  type      = string
+  sensitive = true
+}
+
+variable "perplexity_api_key" {
+  type      = string
+  sensitive = true
+}
+
+variable "next_public_clerk_publishable_key" {
+  type = string
+}
+
+variable "clerk_secret_key" {
+  type      = string
+  sensitive = true
+}
 
 resource "aws_amplify_app" "ai_fiesta" {
   name       = "ai-fiesta-chat"
