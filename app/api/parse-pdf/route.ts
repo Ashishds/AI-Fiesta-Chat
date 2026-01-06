@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-// Import pdfjs-dist
-import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
+
+// @ts-ignore
+const pdfjsLib = require("pdfjs-dist/legacy/build/pdf.js");
 
 export async function POST(request: NextRequest) {
     try {
@@ -12,11 +13,14 @@ export async function POST(request: NextRequest) {
         }
 
         const buffer = Buffer.from(await file.arrayBuffer());
-
-        // Convert Buffer to Uint8Array for pdfjs
+        // Convert Buffer to Uint8Array/ArrayBuffer for pdfjs
         const data = new Uint8Array(buffer);
 
         try {
+            // Disable worker for Node.js environment
+            // @ts-ignore
+            pdfjsLib.GlobalWorkerOptions.workerSrc = false;
+
             const loadingTask = pdfjsLib.getDocument({ data });
             const pdfDocument = await loadingTask.promise;
 
@@ -35,7 +39,8 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ text: extractedText });
         } catch (error) {
             console.error("PDF parsing error:", error);
-            return NextResponse.json({ error: error instanceof Error ? error.message : "Failed to parse PDF structure" }, { status: 500 });
+            // Enhanced error message
+            return NextResponse.json({ error: error instanceof Error ? `Parser Error: ${error.message}` : "Failed to parse PDF structure" }, { status: 500 });
         }
     } catch (error) {
         console.error("API error:", error);
