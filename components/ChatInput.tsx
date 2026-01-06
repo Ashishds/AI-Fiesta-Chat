@@ -116,7 +116,8 @@ export default function ChatInput({ onSendMessage }: ChatInputProps) {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
             const isImage = file.type.startsWith("image/");
-            const isPdf = file.type === "application/pdf";
+            // PDF Support Disabled due to Server Environment Constraints
+            // const isPdf = file.type === "application/pdf"; 
             const isText = file.type === "text/plain" || file.name.endsWith(".md") || file.name.endsWith(".json") || file.name.endsWith(".txt");
 
             if (isImage) {
@@ -127,39 +128,6 @@ export default function ChatInput({ onSendMessage }: ChatInputProps) {
                     }
                 };
                 reader.readAsDataURL(file);
-            } else if (isPdf) {
-                setIsUploading(true);
-                const formData = new FormData();
-                formData.append("file", file);
-
-                try {
-                    const res = await fetch("/api/parse-pdf", {
-                        method: "POST",
-                        body: formData,
-                    });
-
-                    const data = await res.json();
-
-                    if (!res.ok) {
-                        throw new Error(data.error || "Parsing failed");
-                    }
-
-                    if (data.text) {
-                        setAttachedContext({ name: file.name, content: data.text });
-                    } else {
-                        throw new Error("No text extracted from PDF");
-                    }
-                } catch (error) {
-                    console.error("PDF upload failed", error);
-                    // More user-friendly error if HTML is returned (network/server error)
-                    if (error instanceof SyntaxError && error.message.includes("Unexpected token")) {
-                        alert("Server Error: Unable to process PDF at this time. Please try again later.");
-                    } else {
-                        alert(`Failed to parse PDF: ${error instanceof Error ? error.message : "Unknown error"}`);
-                    }
-                } finally {
-                    setIsUploading(false);
-                }
             } else if (isText) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
@@ -170,7 +138,7 @@ export default function ChatInput({ onSendMessage }: ChatInputProps) {
                 };
                 reader.readAsText(file);
             } else {
-                alert("Unsupported file type. Please upload Images, PDFs, or Text files.");
+                alert("Unsupported file type. Please upload Images or Text files (.txt, .md, .json).");
             }
 
             if (fileInputRef.current) fileInputRef.current.value = "";
@@ -239,7 +207,7 @@ export default function ChatInput({ onSendMessage }: ChatInputProps) {
                         type="file"
                         ref={fileInputRef}
                         onChange={handleFileSelect}
-                        accept="image/*,application/pdf,text/plain,.md,.json,.txt"
+                        accept="image/*,text/plain,.md,.json,.txt"
                         className="hidden"
                     />
 
