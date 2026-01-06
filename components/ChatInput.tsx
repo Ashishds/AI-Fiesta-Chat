@@ -47,7 +47,8 @@ export default function ChatInput({ onSendMessage }: ChatInputProps) {
                     } else if (event.error === 'no-speech') {
                         // Ignore no-speech error
                     } else {
-                        alert(`Voice Error: ${event.error}`);
+                        // Suppress generic errors to avoid spamming alerts
+                        console.warn(`Voice Error: ${event.error}`);
                     }
                 };
 
@@ -150,7 +151,12 @@ export default function ChatInput({ onSendMessage }: ChatInputProps) {
                     }
                 } catch (error) {
                     console.error("PDF upload failed", error);
-                    alert(`Failed to parse PDF: ${error instanceof Error ? error.message : "Unknown error"}`);
+                    // More user-friendly error if HTML is returned (network/server error)
+                    if (error instanceof SyntaxError && error.message.includes("Unexpected token")) {
+                        alert("Server Error: Unable to process PDF at this time. Please try again later.");
+                    } else {
+                        alert(`Failed to parse PDF: ${error instanceof Error ? error.message : "Unknown error"}`);
+                    }
                 } finally {
                     setIsUploading(false);
                 }
@@ -180,11 +186,11 @@ export default function ChatInput({ onSendMessage }: ChatInputProps) {
     };
 
     return (
-        <div className="border-t border-border bg-card shadow-[0_-2px_8px_rgba(0,0,0,0.05)]">
-            <div className="max-w-3xl mx-auto px-4 py-3">
+        <div className="bg-transparent pb-4">
+            <div className="max-w-4xl mx-auto px-4">
                 {/* Preview Area (Images & Docs) */}
                 {(selectedImages.length > 0 || attachedContext || isUploading) && (
-                    <div className="flex gap-3 mb-3 overflow-x-auto pb-2 items-start">
+                    <div className="flex gap-3 mb-2 overflow-x-auto pb-2 items-start px-2">
                         {/* Images */}
                         {selectedImages.map((img, index) => (
                             <div key={index} className="relative group flex-shrink-0">
@@ -204,7 +210,7 @@ export default function ChatInput({ onSendMessage }: ChatInputProps) {
 
                         {/* Document Badge */}
                         {attachedContext && (
-                            <div className="relative group flex-shrink-0 h-20 w-32 bg-purple-50 border border-purple-200 rounded-lg flex flex-col items-center justify-center p-2 text-center">
+                            <div className="relative group flex-shrink-0 h-20 w-32 bg-white/50 backdrop-blur-sm border border-purple-200 rounded-lg flex flex-col items-center justify-center p-2 text-center shadow-sm">
                                 <FileText className="w-8 h-8 text-purple-600 mb-1" />
                                 <span className="text-xs text-purple-900 font-medium truncate w-full px-1" title={attachedContext.name}>
                                     {attachedContext.name}
@@ -220,7 +226,7 @@ export default function ChatInput({ onSendMessage }: ChatInputProps) {
 
                         {/* Loading Spinner */}
                         {isUploading && (
-                            <div className="h-20 w-32 flex flex-col items-center justify-center bg-gray-50 rounded-lg border border-border">
+                            <div className="h-20 w-32 flex flex-col items-center justify-center bg-gray-50/80 rounded-lg border border-border">
                                 <Loader2 className="w-6 h-6 text-purple-600 animate-spin mb-1" />
                                 <span className="text-xs text-secondary-foreground">Parsing PDF...</span>
                             </div>
@@ -228,7 +234,7 @@ export default function ChatInput({ onSendMessage }: ChatInputProps) {
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="flex items-end gap-3">
+                <form onSubmit={handleSubmit} className="flex flex-col gap-2">
                     <input
                         type="file"
                         ref={fileInputRef}
@@ -237,19 +243,22 @@ export default function ChatInput({ onSendMessage }: ChatInputProps) {
                         className="hidden"
                     />
 
-                    {/* Plus Button (Triggers File Input) */}
-                    <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={isUploading}
-                        className="flex-shrink-0 w-9 h-9 flex items-center justify-center text-secondary hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors border border-transparent hover:border-purple-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="Upload Image or Document"
-                    >
-                        <Plus className="w-5 h-5" />
-                    </button>
+                    {/* Capsule Input Container */}
+                    <div className={`relative flex items-end gap-2 bg-white dark:bg-zinc-800 border shadow-lg rounded-[26px] pl-3 pr-2 py-2 transition-all duration-200 ease-in-out
+                        ${isListening ? "border-red-500 ring-4 ring-red-500/10" : "border-gray-200 dark:border-zinc-700 focus-within:border-purple-300 focus-within:ring-4 focus-within:ring-purple-500/10"}`}>
 
-                    {/* Text Input */}
-                    <div className="flex-1 relative">
+                        {/* Plus Button */}
+                        <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={isUploading}
+                            className="flex-shrink-0 w-8 h-8 flex items-center justify-center text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-full transition-colors mb-0.5"
+                            title="Upload Image or Document"
+                        >
+                            <Plus className="w-5 h-5" />
+                        </button>
+
+                        {/* Text Input */}
                         <textarea
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
@@ -262,35 +271,44 @@ export default function ChatInput({ onSendMessage }: ChatInputProps) {
                                                 "Ask me anything..."
                             }
                             rows={1}
-                            className={`w-full resize-none px-4 py-2.5 text-sm bg-background border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 max-h-32 min-h-[42px] transition-all
-                                ${isListening ? "border-red-500 ring-2 ring-red-500/20" : "border-border"}`}
+                            className="w-full resize-none py-2 text-base bg-transparent border-none focus:ring-0 text-gray-800 dark:text-gray-100 placeholder:text-gray-400 max-h-32 min-h-[44px]"
+                            style={{ scrollbarWidth: 'none' }}
                         />
+
+                        {/* Right Actions Group */}
+                        <div className="flex items-center gap-1 mb-0.5">
+                            {/* Microphone Button */}
+                            <button
+                                type="button"
+                                onClick={toggleListening}
+                                className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full transition-all
+                                    ${isListening
+                                        ? "text-white bg-red-500 hover:bg-red-600 animate-pulse shadow-md"
+                                        : "text-gray-500 hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-zinc-700"
+                                    }`}
+                                title={isListening ? "Stop Listening" : "Start Voice Input"}
+                            >
+                                {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-5 h-5" />}
+                            </button>
+
+                            {/* Send Button */}
+                            <button
+                                type="submit"
+                                disabled={(!input.trim() && selectedImages.length === 0 && !attachedContext) || isUploading}
+                                className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full transition-all shadow-sm
+                                    ${(input.trim() || selectedImages.length > 0 || attachedContext) && !isUploading
+                                        ? "bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
+                                        : "bg-gray-200 text-gray-400 cursor-not-allowed dark:bg-zinc-700 dark:text-zinc-500"
+                                    }`}
+                            >
+                                <Send className="w-4 h-4" />
+                            </button>
+                        </div>
                     </div>
-
-                    {/* Microphone Button */}
-                    <button
-                        type="button"
-                        onClick={toggleListening}
-                        className={`flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-lg transition-all
-                            ${isListening
-                                ? "text-white bg-red-500 hover:bg-red-600 shadow-md animate-pulse"
-                                : "text-secondary hover:text-secondary-foreground hover:bg-background"
-                            }`}
-                        title={isListening ? "Stop Listening" : "Start Voice Input"}
-                    >
-                        {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-                    </button>
-
-                    {/* Send Button */}
-                    {(input.trim() || selectedImages.length > 0 || attachedContext) && !isUploading && (
-                        <button
-                            type="submit"
-                            className="flex-shrink-0 w-9 h-9 flex items-center justify-center text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors shadow-sm"
-                        >
-                            <Send className="w-4 h-4" />
-                        </button>
-                    )}
                 </form>
+                <div className="text-center mt-2">
+                    <p className="text-[10px] text-gray-400">AI can make mistakes. Check important info.</p>
+                </div>
             </div>
         </div>
     );
