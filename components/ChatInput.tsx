@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { Send, Plus, Mic, X, Image as ImageIcon, FileText, Loader2 } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Send, Plus, Mic, X, Image as ImageIcon, FileText, Loader2, MicOff } from "lucide-react";
 
 interface ChatInputProps {
     onSendMessage: (text: string, images?: string[]) => void;
@@ -12,7 +12,61 @@ export default function ChatInput({ onSendMessage }: ChatInputProps) {
     const [selectedImages, setSelectedImages] = useState<string[]>([]);
     const [attachedContext, setAttachedContext] = useState<{ name: string; content: string } | null>(null);
     const [isUploading, setIsUploading] = useState(false);
+    const [isListening, setIsListening] = useState(false);
+
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const recognitionRef = useRef<any>(null); // SpeechRecognition instance
+
+    // Initialize Speech Recognition
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+            if (SpeechRecognition) {
+                const recognition = new SpeechRecognition();
+                recognition.continuous = true;
+                recognition.interimResults = true;
+                recognition.lang = "en-US";
+
+                recognition.onresult = (event: any) => {
+                    let transcript = "";
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        if (event.results[i].isFinal) {
+                            transcript += event.results[i][0].transcript;
+                        }
+                    }
+                    if (transcript) {
+                        setInput((prev) => prev + (prev && !prev.endsWith(" ") ? " " : "") + transcript);
+                    }
+                };
+
+                recognition.onerror = (event: any) => {
+                    console.error("Speech recognition error", event.error);
+                    setIsListening(false);
+                };
+
+                recognition.onend = () => {
+                    setIsListening(false);
+                };
+
+                recognitionRef.current = recognition;
+            }
+        }
+    }, []);
+
+    const toggleListening = () => {
+        if (!recognitionRef.current) {
+            alert("Speech recognition is not supported in this browser.");
+            return;
+        }
+
+        if (isListening) {
+            recognitionRef.current.stop();
+            setIsListening(false);
+        } else {
+            recognitionRef.current.start();
+            setIsListening(true);
+        }
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -31,6 +85,10 @@ export default function ChatInput({ onSendMessage }: ChatInputProps) {
             setInput("");
             setSelectedImages([]);
             setAttachedContext(null);
+            if (isListening) {
+                recognitionRef.current?.stop();
+                setIsListening(false);
+            }
         }
     };
 
@@ -49,7 +107,6 @@ export default function ChatInput({ onSendMessage }: ChatInputProps) {
             const isText = file.type === "text/plain" || file.name.endsWith(".md") || file.name.endsWith(".json") || file.name.endsWith(".txt");
 
             if (isImage) {
-                // Handle Image (Existing Logic)
                 const reader = new FileReader();
                 reader.onloadend = () => {
                     if (typeof reader.result === "string") {
@@ -58,7 +115,6 @@ export default function ChatInput({ onSendMessage }: ChatInputProps) {
                 };
                 reader.readAsDataURL(file);
             } else if (isPdf) {
-                // Handle PDF (Server-side Parse)
                 setIsUploading(true);
                 const formData = new FormData();
                 formData.append("file", file);
@@ -83,7 +139,6 @@ export default function ChatInput({ onSendMessage }: ChatInputProps) {
                     setIsUploading(false);
                 }
             } else if (isText) {
-                // Handle Text File (Client-side Read)
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const text = e.target?.result as string;
@@ -96,7 +151,6 @@ export default function ChatInput({ onSendMessage }: ChatInputProps) {
                 alert("Unsupported file type. Please upload Images, PDFs, or Text files.");
             }
 
-            // Reset input
             if (fileInputRef.current) fileInputRef.current.value = "";
         }
     };
@@ -184,22 +238,30 @@ export default function ChatInput({ onSendMessage }: ChatInputProps) {
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={handleKeyDown}
                         placeholder={
-                            isUploading ? "Uploading document..." :
-                                attachedContext ? "Ask questions about the document..." :
-                                    selectedImages.length > 0 ? "Ask a question about these images..." :
-                                        "Ask me anything..."
+                            isListening ? "Listening..." :
+                                isUploading ? "Uploading document..." :
+                                    attachedContext ? "Ask questions about the document..." :
+                                        selectedImages.length > 0 ? "Ask a question about these images..." :
+                                            "Ask me anything..."
                         }
                         rows={1}
-                        className="w-full resize-none px-4 py-2.5 text-sm bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 max-h-32 min-h-[42px]"
+                        className={`w-full resize-none px-4 py-2.5 text-sm bg-background border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 max-h-32 min-h-[42px] transition-all
+                            ${isListening ? "border-red-500 ring-2 ring-red-500/20" : "border-border"}`}
                     />
                 </div>
 
                 {/* Microphone Button */}
                 <button
                     type="button"
-                    className="flex-shrink-0 w-9 h-9 flex items-center justify-center text-secondary hover:text-secondary-foreground hover:bg-background rounded-lg transition-colors"
+                    onClick={toggleListening}
+                    className={`flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-lg transition-all
+                        ${isListening
+                            ? "text-white bg-red-500 hover:bg-red-600 shadow-md animate-pulse"
+                            : "text-secondary hover:text-secondary-foreground hover:bg-background"
+                        }`}
+                    title={isListening ? "Stop Listening" : "Start Voice Input"}
                 >
-                    <Mic className="w-5 h-5" />
+                    {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
                 </button>
 
                 {/* Send Button (only when text or attachments are entered) */}
