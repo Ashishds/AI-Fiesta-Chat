@@ -9,6 +9,9 @@ const nextConfig = {
         GROQ_API_KEY: process.env.GROQ_API_KEY,
         PERPLEXITY_API_KEY: process.env.PERPLEXITY_API_KEY,
     },
+    experimental: {
+        serverComponentsExternalPackages: ["pdf-parse"],
+    },
     // Amplify Web Compute compatibility
     output: 'standalone',
 };
