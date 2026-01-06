@@ -12,6 +12,7 @@ import { SignInButton } from "@clerk/nextjs";
 interface Message {
     id: string;
     text: string;
+    images?: string[];
     timestamp: number;
 }
 
@@ -30,11 +31,12 @@ export default function ChatPage() {
     const [responses, setResponses] = useState<ResponsesState>({});
     const streamingTexts = useRef<Record<string, string>>({});
 
-    const handleSendMessage = async (text: string) => {
+    const handleSendMessage = async (text: string, images?: string[]) => {
         const messageId = Date.now().toString();
         const newMessage: Message = {
             id: messageId,
             text,
+            images,
             timestamp: Date.now(),
         };
 
@@ -63,7 +65,7 @@ export default function ChatPage() {
             const res = await fetch("/api/chat/stream", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: text, models: enabledModels }),
+                body: JSON.stringify({ message: text, images, models: enabledModels }),
             });
 
             if (!res.ok) {

@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import ChatColumn from "./ChatColumn";
 
 interface ChatContainerProps {
-    messages: Array<{ id: string; text: string; timestamp: number }>;
+    messages: Array<{ id: string; text: string; images?: string[]; timestamp: number }>;
     responses: Record<string, Array<{
         text: string;
         timestamp: number;

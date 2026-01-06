@@ -11,7 +11,7 @@ export class PerplexityProvider implements AIProvider {
         this.model = model;
     }
 
-    async sendMessage(prompt: string): Promise<AIResponse> {
+    async sendMessage(prompt: string, images?: string[]): Promise<AIResponse> {
         const apiKey = process.env.PERPLEXITY_API_KEY;
 
         if (!apiKey) {

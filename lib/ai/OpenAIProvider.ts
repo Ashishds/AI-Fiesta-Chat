@@ -11,7 +11,7 @@ export class OpenAIProvider implements AIProvider {
         this.model = model;
     }
 
-    async sendMessage(prompt: string): Promise<AIResponse> {
+    async sendMessage(prompt: string, images?: string[]): Promise<AIResponse> {
         // Read API key at request time, not module load time
         const apiKey = process.env.OPENAI_API_KEY;
 
@@ -25,6 +25,21 @@ export class OpenAIProvider implements AIProvider {
         }
 
         try {
+            // Prepare content: either string (text-only) or array (multimodal)
+            let content: any = prompt;
+
+            if (images && images.length > 0) {
+                content = [
+                    { type: "text", text: prompt },
+                    ...images.map(img => ({
+                        type: "image_url",
+                        image_url: {
+                            url: img, // Assuming img is valid base64 data URI
+                        },
+                    })),
+                ];
+            }
+
             const response = await fetch("https://api.openai.com/v1/chat/completions", {
                 method: "POST",
                 headers: {
@@ -36,7 +51,7 @@ export class OpenAIProvider implements AIProvider {
                     messages: [
                         {
                             role: "user",
-                            content: prompt,
+                            content: content,
                         },
                     ],
                     max_tokens: 500,

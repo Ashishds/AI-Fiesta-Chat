@@ -3,7 +3,7 @@ import { NextRequest } from "next/server";
 // Streaming API endpoint for real-time responses
 export async function POST(request: NextRequest) {
     try {
-        const { message, models } = await request.json();
+        const { message, models, images } = await request.json();
 
         if (!message || !models || !Array.isArray(models)) {
             return new Response(JSON.stringify({ error: "Invalid request body" }), {
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
                 // Process each model in parallel but stream results as they come
                 const streamPromises = models.map(async (modelId: string) => {
                     try {
-                        await streamModelResponse(modelId, message, (chunk) => {
+                        await streamModelResponse(modelId, message, images, (chunk) => {
                             const event = `data: ${JSON.stringify({ model: modelId, chunk, done: false })}\n\n`;
                             controller.enqueue(encoder.encode(event));
                         });
@@ -61,6 +61,7 @@ export async function POST(request: NextRequest) {
 async function streamModelResponse(
     modelId: string,
     message: string,
+    images: string[] | undefined,
     onChunk: (chunk: string) => void
 ): Promise<void> {
     const apiConfigs: Record<string, { url: string; apiKey: string | undefined; model: string; isPerplexity?: boolean }> = {
@@ -91,6 +92,25 @@ async function streamModelResponse(
         throw new Error(`API key not configured for ${modelId}`);
     }
 
+    // Construct content payload
+    let content: any = message;
+
+    // Only GPT-4o-mini supports Vision in this list currently
+    if (modelId === "gpt-4o-mini" && images && images.length > 0) {
+        content = [
+            { type: "text", text: message },
+            ...images.map(img => ({
+                type: "image_url",
+                image_url: {
+                    url: img, // Assuming img is valid base64 data URI
+                },
+            })),
+        ];
+    } else if (images && images.length > 0) {
+        // Append note for models that don't support images
+        content = `${message}\n\n[System Note: The user attached ${images.length} image(s), but this model does not support image analysis. Answer based on the text only.]`;
+    }
+
     const response = await fetch(config.url, {
         method: "POST",
         headers: {
@@ -99,7 +119,7 @@ async function streamModelResponse(
         },
         body: JSON.stringify({
             model: config.model,
-            messages: [{ role: "user", content: message }],
+            messages: [{ role: "user", content: content }],
             max_tokens: 1000,
             stream: true,
         }),

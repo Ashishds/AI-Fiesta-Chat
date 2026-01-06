@@ -13,7 +13,7 @@ interface ChatColumnProps {
         icon: string;
         provider: string;
     };
-    messages: Array<{ id: string; text: string; timestamp: number }>;
+    messages: Array<{ id: string; text: string; images?: string[]; timestamp: number }>;
     responses: Array<{
         text: string;
         timestamp: number;
@@ -69,8 +69,22 @@ export default function ChatColumn({ model, messages, responses }: ChatColumnPro
                     <div key={msg.id}>
                         {/* User Message */}
                         <div className="mb-3">
-                            <div className="bg-background rounded-lg px-4 py-2.5">
-                                <p className="text-sm text-secondary-foreground">{msg.text}</p>
+                            <div className="flex flex-col items-end gap-2">
+                                {msg.images && msg.images.length > 0 && (
+                                    <div className="flex gap-2">
+                                        {msg.images.map((img, i) => (
+                                            <img
+                                                key={i}
+                                                src={img}
+                                                alt="User upload"
+                                                className="w-32 h-32 object-cover rounded-lg border border-border"
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+                                <div className="bg-background rounded-lg px-4 py-2.5">
+                                    <p className="text-sm text-secondary-foreground">{msg.text}</p>
+                                </div>
                             </div>
                         </div>
 

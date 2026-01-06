@@ -1,7 +1,7 @@
 export interface AIProvider {
     name: string;
     icon: string;
-    sendMessage(prompt: string): Promise<AIResponse>;
+    sendMessage(prompt: string, images?: string[]): Promise<AIResponse>;
 }
 
 export interface AIResponse {
