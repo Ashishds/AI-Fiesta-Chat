@@ -2,10 +2,6 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Send, Plus, Mic, X, Image as ImageIcon, FileText, Loader2, MicOff, Globe, Search } from "lucide-react";
-import * as pdfjsLib from "pdfjs-dist";
-
-// Configure PDF.js worker (Load from CDN to avoid build/bundle issues)
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 interface ChatInputProps {
     onSendMessage: (text: string, images?: string[]) => void;
@@ -83,6 +79,11 @@ export default function ChatInput({ onSendMessage }: ChatInputProps) {
     // --- CLIENT-SIDE PDF PARSING ---
     const parsePdfClientSide = async (file: File) => {
         try {
+            // Dynamically import PDF.js only on the client when needed
+            // This prevents "DOMMatrix is not defined" errors during server-side build
+            const pdfjsLib = await import("pdfjs-dist");
+            pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+
             const arrayBuffer = await file.arrayBuffer();
             const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
             const pdf = await loadingTask.promise;
