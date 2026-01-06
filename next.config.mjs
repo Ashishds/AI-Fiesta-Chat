@@ -14,6 +14,12 @@ const nextConfig = {
     },
     // Amplify Web Compute compatibility
     output: 'standalone',
+    // Webpack config to stub out 'canvas' (pdfjs-dist optional dep for Node.js)
+    webpack: (config) => {
+        config.resolve.alias.canvas = false;
+        return config;
+    },
 };
 
 export default nextConfig;
+
