@@ -79,10 +79,11 @@ export default function ChatInput({ onSendMessage }: ChatInputProps) {
     // --- CLIENT-SIDE PDF PARSING ---
     const parsePdfClientSide = async (file: File) => {
         try {
-            // Dynamically import PDF.js only on the client when needed
-            // This prevents "DOMMatrix is not defined" errors during server-side build
+            // Dynamically import PDF.js
             const pdfjsLib = await import("pdfjs-dist");
-            pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+
+            // Use local worker (Guaranteed v3.11.174 from public folder)
+            pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
 
             const arrayBuffer = await file.arrayBuffer();
             const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
@@ -92,12 +93,14 @@ export default function ChatInput({ onSendMessage }: ChatInputProps) {
             for (let i = 1; i <= pdf.numPages; i++) {
                 const page = await pdf.getPage(i);
                 const textContent = await page.getTextContent();
-                const pageText = textContent.items.map((item: any) => item.str).join(" ");
+                const pageText = textContent.items.map((item: any) => (item as any).str).join(" ");
                 fullText += pageText + "\n";
             }
             return fullText;
-        } catch (error) {
+        } catch (error: any) {
             console.error("Client-side PDF parse error:", error);
+            // Detailed alert for debugging
+            alert(`PDF Error: ${error?.message || error}`);
             throw new Error("Failed to read PDF content.");
         }
     };
@@ -126,11 +129,11 @@ export default function ChatInput({ onSendMessage }: ChatInputProps) {
                 if (isPdf) {
                     setIsUploading(true);
                     try {
-                        // Use Client-Side Parsing instead of API
                         const text = await parsePdfClientSide(file);
+                        if (!text.trim()) throw new Error("PDF contained no readable text (scanned?)");
                         setAttachedContext({ name: file.name, content: text });
                     } catch (err) {
-                        alert("Error reading PDF. Please try a different file.");
+                        // Alert already handled in parsePdfClientSide for details
                     } finally {
                         setIsUploading(false);
                     }
@@ -149,6 +152,13 @@ export default function ChatInput({ onSendMessage }: ChatInputProps) {
             // Reset input
             if (e.target) e.target.value = "";
         }
+    };
+
+    const enableSearchMode = (mode: 'web' | 'deep') => {
+        const prefix = mode === 'web' ? "Search for: " : "Deep research on: ";
+        setInput(prev => prefix + prev);
+        setShowMenu(false);
+        // Focus expected
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -218,11 +228,11 @@ export default function ChatInput({ onSendMessage }: ChatInputProps) {
 
                                 {/* Placeholder "Tools" to match Screenshot */}
                                 <div className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Generate / Tools</div>
-                                <button type="button" className="w-full text-left flex items-center gap-3 px-3 py-2 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded-lg transition-colors text-sm text-gray-700 dark:text-gray-200 opacity-50 cursor-not-allowed" title="Coming Soon">
+                                <button type="button" onClick={() => enableSearchMode('web')} className="w-full text-left flex items-center gap-3 px-3 py-2 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded-lg transition-colors text-sm text-gray-700 dark:text-gray-200">
                                     <Globe className="w-4 h-4 text-blue-500" />
                                     Web Search
                                 </button>
-                                <button type="button" className="w-full text-left flex items-center gap-3 px-3 py-2 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded-lg transition-colors text-sm text-gray-700 dark:text-gray-200 opacity-50 cursor-not-allowed" title="Coming Soon">
+                                <button type="button" onClick={() => enableSearchMode('deep')} className="w-full text-left flex items-center gap-3 px-3 py-2 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded-lg transition-colors text-sm text-gray-700 dark:text-gray-200">
                                     <Search className="w-4 h-4 text-purple-500" />
                                     Deep Research
                                 </button>
