@@ -28,8 +28,13 @@ export default function Sidebar({ onNewChat, messages }: SidebarProps) {
                 {/* Logo */}
                 <div className="p-4 border-b border-border flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-700 rounded-lg flex items-center justify-center">
-                            <Sparkles className="w-5 h-5 text-white" />
+                        <div className="w-8 h-8 flex items-center justify-center">
+                            {/* AI Fiesta Custom Logo: Chat Bubble + Sparkle */}
+                            <svg className="w-8 h-8 text-purple-600" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="32" height="32" rx="8" className="fill-purple-100" />
+                                <path d="M16 8C11.5817 8 8 11.5817 8 16C8 18.006 8.73691 19.8391 9.97022 21.2662L9.27838 23.3418C9.07474 23.9527 9.68067 24.5054 10.2678 24.2445L12.5704 23.2209C13.606 23.7225 14.767 24 16 24C20.4183 24 24 20.4183 24 16C24 11.5817 20.4183 8 16 8Z" className="fill-purple-600" />
+                                <path d="M16 11C16.3514 12.8348 17.6534 14.2816 19.4526 14.8026C17.6534 15.3236 16.3514 16.7704 16 18.6053C15.6486 16.7704 14.3466 15.3236 12.5474 14.8026C14.3466 14.2816 15.6486 12.8348 16 11Z" fill="white" />
+                            </svg>
                         </div>
                         <span className="font-display font-semibold text-lg text-secondary-foreground">
                             AI Fiesta Chat
