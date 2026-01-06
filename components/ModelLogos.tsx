@@ -11,12 +11,13 @@ export function OpenAILogo({ className = "w-6 h-6" }: { className?: string }) {
 export function GroqLogo({ className = "w-6 h-6" }: { className?: string }) {
     return (
         <svg className={className} viewBox="0 0 24 24" fill="none">
-            <rect width="24" height="24" rx="4" fill="url(#groq-gradient)" />
-            <path d="M7 12h10M12 7v10" stroke="white" strokeWidth="2" strokeLinecap="round" />
+            <rect width="24" height="24" rx="6" fill="url(#groq-gradient)" />
+            {/* Lightning Bolt for Speed (Groq's selling point) */}
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="white" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             <defs>
                 <linearGradient id="groq-gradient" x1="0" y1="0" x2="24" y2="24">
-                    <stop stopColor="#F97316" />
-                    <stop offset="1" stopColor="#EA580C" />
+                    <stop stopColor="#F55036" />
+                    <stop offset="1" stopColor="#F97316" />
                 </linearGradient>
             </defs>
         </svg>
@@ -26,13 +27,13 @@ export function GroqLogo({ className = "w-6 h-6" }: { className?: string }) {
 export function PerplexityLogo({ className = "w-6 h-6" }: { className?: string }) {
     return (
         <svg className={className} viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="10" fill="url(#perplexity-gradient)" />
-            <path d="M12 6v12M6 12h12" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-            <circle cx="12" cy="12" r="3" fill="white" />
+            <circle cx="12" cy="12" r="12" fill="url(#perplexity-gradient)" />
+            {/* Star/Sparkle for Discovery/Answers */}
+            <path d="M12 4L14.5 9.5L20 12L14.5 14.5L12 20L9.5 14.5L4 12L9.5 9.5L12 4Z" fill="white" />
             <defs>
                 <linearGradient id="perplexity-gradient" x1="0" y1="0" x2="24" y2="24">
-                    <stop stopColor="#06B6D4" />
-                    <stop offset="1" stopColor="#0891B2" />
+                    <stop stopColor="#22D3EE" />
+                    <stop offset="1" stopColor="#0EA5E9" />
                 </linearGradient>
             </defs>
         </svg>
