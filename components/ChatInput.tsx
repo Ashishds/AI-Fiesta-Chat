@@ -180,116 +180,118 @@ export default function ChatInput({ onSendMessage }: ChatInputProps) {
     };
 
     return (
-        <div className="border-t border-border bg-card px-6 py-3 shadow-[0_-2px_8px_rgba(0,0,0,0.05)]">
-            {/* Preview Area (Images & Docs) */}
-            {(selectedImages.length > 0 || attachedContext || isUploading) && (
-                <div className="flex gap-3 mb-3 overflow-x-auto pb-2 items-start">
-                    {/* Images */}
-                    {selectedImages.map((img, index) => (
-                        <div key={index} className="relative group flex-shrink-0">
-                            <img
-                                src={img}
-                                alt={`Selected ${index}`}
-                                className="h-20 w-20 object-cover rounded-lg border border-border shadow-sm"
-                            />
-                            <button
-                                onClick={() => removeImage(index)}
-                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
-                            >
-                                <X className="w-3 h-3" />
-                            </button>
-                        </div>
-                    ))}
+        <div className="border-t border-border bg-card shadow-[0_-2px_8px_rgba(0,0,0,0.05)]">
+            <div className="max-w-3xl mx-auto px-4 py-3">
+                {/* Preview Area (Images & Docs) */}
+                {(selectedImages.length > 0 || attachedContext || isUploading) && (
+                    <div className="flex gap-3 mb-3 overflow-x-auto pb-2 items-start">
+                        {/* Images */}
+                        {selectedImages.map((img, index) => (
+                            <div key={index} className="relative group flex-shrink-0">
+                                <img
+                                    src={img}
+                                    alt={`Selected ${index}`}
+                                    className="h-20 w-20 object-cover rounded-lg border border-border shadow-sm"
+                                />
+                                <button
+                                    onClick={() => removeImage(index)}
+                                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+                                >
+                                    <X className="w-3 h-3" />
+                                </button>
+                            </div>
+                        ))}
 
-                    {/* Document Badge */}
-                    {attachedContext && (
-                        <div className="relative group flex-shrink-0 h-20 w-32 bg-purple-50 border border-purple-200 rounded-lg flex flex-col items-center justify-center p-2 text-center">
-                            <FileText className="w-8 h-8 text-purple-600 mb-1" />
-                            <span className="text-xs text-purple-900 font-medium truncate w-full px-1" title={attachedContext.name}>
-                                {attachedContext.name}
-                            </span>
-                            <button
-                                onClick={removeContext}
-                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
-                            >
-                                <X className="w-3 h-3" />
-                            </button>
-                        </div>
-                    )}
+                        {/* Document Badge */}
+                        {attachedContext && (
+                            <div className="relative group flex-shrink-0 h-20 w-32 bg-purple-50 border border-purple-200 rounded-lg flex flex-col items-center justify-center p-2 text-center">
+                                <FileText className="w-8 h-8 text-purple-600 mb-1" />
+                                <span className="text-xs text-purple-900 font-medium truncate w-full px-1" title={attachedContext.name}>
+                                    {attachedContext.name}
+                                </span>
+                                <button
+                                    onClick={removeContext}
+                                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+                                >
+                                    <X className="w-3 h-3" />
+                                </button>
+                            </div>
+                        )}
 
-                    {/* Loading Spinner */}
-                    {isUploading && (
-                        <div className="h-20 w-32 flex flex-col items-center justify-center bg-gray-50 rounded-lg border border-border">
-                            <Loader2 className="w-6 h-6 text-purple-600 animate-spin mb-1" />
-                            <span className="text-xs text-secondary-foreground">Parsing PDF...</span>
-                        </div>
-                    )}
-                </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="flex items-end gap-3">
-                <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileSelect}
-                    accept="image/*,application/pdf,text/plain,.md,.json,.txt"
-                    className="hidden"
-                />
-
-                {/* Plus Button (Triggers File Input) */}
-                <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploading}
-                    className="flex-shrink-0 w-9 h-9 flex items-center justify-center text-secondary hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors border border-transparent hover:border-purple-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                    title="Upload Image or Document"
-                >
-                    <Plus className="w-5 h-5" />
-                </button>
-
-                {/* Text Input */}
-                <div className="flex-1 relative">
-                    <textarea
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        placeholder={
-                            isListening ? "Listening..." :
-                                isUploading ? "Uploading document..." :
-                                    attachedContext ? "Ask questions about the document..." :
-                                        selectedImages.length > 0 ? "Ask a question about these images..." :
-                                            "Ask me anything..."
-                        }
-                        rows={1}
-                        className={`w-full resize-none px-4 py-2.5 text-sm bg-background border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 max-h-32 min-h-[42px] transition-all
-                            ${isListening ? "border-red-500 ring-2 ring-red-500/20" : "border-border"}`}
-                    />
-                </div>
-
-                {/* Microphone Button */}
-                <button
-                    type="button"
-                    onClick={toggleListening}
-                    className={`flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-lg transition-all
-                        ${isListening
-                            ? "text-white bg-red-500 hover:bg-red-600 shadow-md animate-pulse"
-                            : "text-secondary hover:text-secondary-foreground hover:bg-background"
-                        }`}
-                    title={isListening ? "Stop Listening" : "Start Voice Input"}
-                >
-                    {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-                </button>
-
-                {/* Send Button (only when text or attachments are entered) */}
-                {(input.trim() || selectedImages.length > 0 || attachedContext) && !isUploading && (
-                    <button
-                        type="submit"
-                        className="flex-shrink-0 w-9 h-9 flex items-center justify-center text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors shadow-sm"
-                    >
-                        <Send className="w-4 h-4" />
-                    </button>
+                        {/* Loading Spinner */}
+                        {isUploading && (
+                            <div className="h-20 w-32 flex flex-col items-center justify-center bg-gray-50 rounded-lg border border-border">
+                                <Loader2 className="w-6 h-6 text-purple-600 animate-spin mb-1" />
+                                <span className="text-xs text-secondary-foreground">Parsing PDF...</span>
+                            </div>
+                        )}
+                    </div>
                 )}
-            </form>
+
+                <form onSubmit={handleSubmit} className="flex items-end gap-3">
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileSelect}
+                        accept="image/*,application/pdf,text/plain,.md,.json,.txt"
+                        className="hidden"
+                    />
+
+                    {/* Plus Button (Triggers File Input) */}
+                    <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploading}
+                        className="flex-shrink-0 w-9 h-9 flex items-center justify-center text-secondary hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors border border-transparent hover:border-purple-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Upload Image or Document"
+                    >
+                        <Plus className="w-5 h-5" />
+                    </button>
+
+                    {/* Text Input */}
+                    <div className="flex-1 relative">
+                        <textarea
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            placeholder={
+                                isListening ? "Listening..." :
+                                    isUploading ? "Uploading document..." :
+                                        attachedContext ? "Ask questions about the document..." :
+                                            selectedImages.length > 0 ? "Ask a question about these images..." :
+                                                "Ask me anything..."
+                            }
+                            rows={1}
+                            className={`w-full resize-none px-4 py-2.5 text-sm bg-background border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 max-h-32 min-h-[42px] transition-all
+                                ${isListening ? "border-red-500 ring-2 ring-red-500/20" : "border-border"}`}
+                        />
+                    </div>
+
+                    {/* Microphone Button */}
+                    <button
+                        type="button"
+                        onClick={toggleListening}
+                        className={`flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-lg transition-all
+                            ${isListening
+                                ? "text-white bg-red-500 hover:bg-red-600 shadow-md animate-pulse"
+                                : "text-secondary hover:text-secondary-foreground hover:bg-background"
+                            }`}
+                        title={isListening ? "Stop Listening" : "Start Voice Input"}
+                    >
+                        {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                    </button>
+
+                    {/* Send Button */}
+                    {(input.trim() || selectedImages.length > 0 || attachedContext) && !isUploading && (
+                        <button
+                            type="submit"
+                            className="flex-shrink-0 w-9 h-9 flex items-center justify-center text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors shadow-sm"
+                        >
+                            <Send className="w-4 h-4" />
+                        </button>
+                    )}
+                </form>
+            </div>
         </div>
     );
 }
