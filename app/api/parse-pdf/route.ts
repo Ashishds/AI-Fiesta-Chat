@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ text: data.text });
         } catch (error) {
             console.error("PDF parsing error:", error);
-            return NextResponse.json({ error: "Failed to parse PDF" }, { status: 500 });
+            return NextResponse.json({ error: error instanceof Error ? error.message : "Failed to parse PDF" }, { status: 500 });
         }
     } catch (error) {
         console.error("API error:", error);

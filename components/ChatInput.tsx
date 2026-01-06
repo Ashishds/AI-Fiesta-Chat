@@ -42,6 +42,13 @@ export default function ChatInput({ onSendMessage }: ChatInputProps) {
                 recognition.onerror = (event: any) => {
                     console.error("Speech recognition error", event.error);
                     setIsListening(false);
+                    if (event.error === 'not-allowed') {
+                        alert("Microphone access denied. Please allow microphone access in your browser settings.");
+                    } else if (event.error === 'no-speech') {
+                        // Ignore no-speech error
+                    } else {
+                        alert(`Voice Error: ${event.error}`);
+                    }
                 };
 
                 recognition.onend = () => {
@@ -55,7 +62,7 @@ export default function ChatInput({ onSendMessage }: ChatInputProps) {
 
     const toggleListening = () => {
         if (!recognitionRef.current) {
-            alert("Speech recognition is not supported in this browser.");
+            alert("Speech recognition is not supported in this browser. Please try Chrome or Edge.");
             return;
         }
 
@@ -63,8 +70,13 @@ export default function ChatInput({ onSendMessage }: ChatInputProps) {
             recognitionRef.current.stop();
             setIsListening(false);
         } else {
-            recognitionRef.current.start();
-            setIsListening(true);
+            try {
+                recognitionRef.current.start();
+                setIsListening(true);
+            } catch (err) {
+                console.error("Failed to start speech recognition:", err);
+                alert("Failed to start microphone. Please check permissions.");
+            }
         }
     };
 
@@ -124,17 +136,21 @@ export default function ChatInput({ onSendMessage }: ChatInputProps) {
                         method: "POST",
                         body: formData,
                     });
-                    if (!res.ok) throw new Error("Parsing failed");
+
                     const data = await res.json();
+
+                    if (!res.ok) {
+                        throw new Error(data.error || "Parsing failed");
+                    }
 
                     if (data.text) {
                         setAttachedContext({ name: file.name, content: data.text });
                     } else {
-                        throw new Error("No text extracted");
+                        throw new Error("No text extracted from PDF");
                     }
                 } catch (error) {
                     console.error("PDF upload failed", error);
-                    alert("Failed to parse PDF. Please try a text file.");
+                    alert(`Failed to parse PDF: ${error instanceof Error ? error.message : "Unknown error"}`);
                 } finally {
                     setIsUploading(false);
                 }
